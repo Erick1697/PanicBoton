@@ -251,7 +251,7 @@ class MainActivity : AppCompatActivity() {
             putString("numeroContacto2", etNumeroContacto2.text.toString())
             putString("nombreContacto3", etNombreContacto3.text.toString())
             putString("numeroContacto3", etNumeroContacto3.text.toString())
-            putString("nombreContacto4", etNombreContacto1.text.toString())
+            putString("nombreContacto4", etNombreContacto4.text.toString())
             putString("numeroContacto4", etNumeroContacto4.text.toString())
             putBoolean("hayAlgo", hayAlgo)
             putBoolean("hayAlgo2", hayAlgo2)
