@@ -44,13 +44,17 @@ class MainActivity : AppCompatActivity() {
     private var hayAlgo: Boolean = false
     private var hayAlgo2: Boolean = false
     private var hayAlgo3: Boolean = false
+    private var hayAlgo4: Boolean = false
+
     private lateinit var etMensaje: EditText
     private lateinit var etNombreContacto1: EditText
     private lateinit var etNombreContacto2: EditText
     private lateinit var etNombreContacto3: EditText
+    private lateinit var etNombreContacto4: EditText
     private lateinit var etNumeroContacto1: EditText
     private lateinit var etNumeroContacto2: EditText
     private lateinit var etNumeroContacto3: EditText
+    private lateinit var etNumeroContacto4: EditText
     private lateinit var swInitCamara: SwitchCompat
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -82,6 +86,8 @@ class MainActivity : AppCompatActivity() {
         etNombreContacto1 = findViewById(R.id.etNombreContacto1)
         etNombreContacto2 = findViewById(R.id.etNombreContacto2)
         etNombreContacto3 = findViewById(R.id.etNombreContacto3)
+        etNombreContacto4 = findViewById(R.id.etNombreContacto4)
+        etNumeroContacto4 = findViewById(R.id.etNumeroContacto4)
         etNumeroContacto1 = findViewById(R.id.etNumeroContacto1)
         etNumeroContacto2 = findViewById(R.id.etNumeroContacto2)
         etNumeroContacto3 = findViewById(R.id.etNumeroContacto3)
@@ -101,8 +107,8 @@ class MainActivity : AppCompatActivity() {
         requestAllPermissions()
         verifyPermissionSMS()
         verifyGPS()
-        manageLocation()
-        requestNewLocationData()
+        //manageLocation()
+        //requestNewLocationData()
     }
 
     private fun requestAllPermissions(){
@@ -127,7 +133,7 @@ class MainActivity : AppCompatActivity() {
     private fun verifyGPS(){
         if (allPermissionsGrantedGPS()){
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-            manageLocation()
+           // manageLocation()
         }
         else {
             requestPermissionsGPS()
@@ -176,7 +182,7 @@ class MainActivity : AppCompatActivity() {
             }
             else {
                 ubicacion = null
-                Toast.makeText(baseContext, "Active la ubicacion para un mejor servicio", Toast.LENGTH_SHORT).show()
+                Toast.makeText(baseContext, "Active la ubicación para un mejor servicio", Toast.LENGTH_SHORT).show()
             }
         }
         else requestPermissionsGPS()
@@ -201,6 +207,10 @@ class MainActivity : AppCompatActivity() {
             ubicacion = "Latitud: " + mLastLocation.latitude.toString()
             ubicacion+= " "
             ubicacion += "Longitud: " +mLastLocation.longitude.toString()
+            sendMessage()
+            if (swInitCamara.isChecked){
+                iniciarVideo()
+            }
         }
     }
 
@@ -241,9 +251,12 @@ class MainActivity : AppCompatActivity() {
             putString("numeroContacto2", etNumeroContacto2.text.toString())
             putString("nombreContacto3", etNombreContacto3.text.toString())
             putString("numeroContacto3", etNumeroContacto3.text.toString())
+            putString("nombreContacto4", etNombreContacto1.text.toString())
+            putString("numeroContacto4", etNumeroContacto4.text.toString())
             putBoolean("hayAlgo", hayAlgo)
             putBoolean("hayAlgo2", hayAlgo2)
             putBoolean("hayAlgo3", hayAlgo3)
+            putBoolean("hayAlgo4", hayAlgo4)
             putBoolean("initVideo", swInitCamara.isChecked)
         }.apply()
     }
@@ -252,6 +265,7 @@ class MainActivity : AppCompatActivity() {
         hayAlgo = sharedPreferences.getBoolean("hayAlgo", false)
         hayAlgo2 = sharedPreferences.getBoolean("hayAlgo2", false)
         hayAlgo3 = sharedPreferences.getBoolean("hayAlgo3", false)
+        hayAlgo3 = sharedPreferences.getBoolean("hayAlgo4", false)
         etMensaje.setText(sharedPreferences.getString("mensaje", "¡¡Ayuda!! Algo ha pasado y me siento en peligro"))
         etNombreContacto1.setText(sharedPreferences.getString("nombreContacto1", ""))
         etNumeroContacto1.setText(sharedPreferences.getString("numeroContacto1", ""))
@@ -259,6 +273,8 @@ class MainActivity : AppCompatActivity() {
         etNumeroContacto2.setText(sharedPreferences.getString("numeroContacto2", ""))
         etNombreContacto3.setText(sharedPreferences.getString("nombreContacto3", ""))
         etNumeroContacto3.setText(sharedPreferences.getString("numeroContacto3", ""))
+        etNombreContacto4.setText(sharedPreferences.getString("nombreContacto4", ""))
+        etNumeroContacto4.setText(sharedPreferences.getString("numeroContacto4", ""))
         swInitCamara.isChecked = sharedPreferences.getBoolean("initVideo", true)
     }
 
@@ -271,7 +287,7 @@ class MainActivity : AppCompatActivity() {
             }
             startActivity(intent)
         }
-        if (etNumeroContacto1.text.isEmpty() && etNumeroContacto2.text.isEmpty() && etNumeroContacto3.text.isEmpty()){
+        if (etNumeroContacto1.text.isEmpty() && etNumeroContacto2.text.isEmpty() && etNumeroContacto3.text.isEmpty() && etNumeroContacto4.text.isEmpty()){
             val lyAjustes = findViewById<LinearLayout>(R.id.lyAjustes)
             lyAjustes.isVisible = true
             val btSos = findViewById<LinearLayout>(R.id.btSos)
@@ -279,11 +295,38 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(baseContext, "Agregue contactos para poder enviar el mensaje", Toast.LENGTH_LONG).show()
         }
         else{
-        setLocation()
+            if (isLocationActive()){
+                enviarConLocation()
+            }
+            else{
+                enviarSinLocation()
+            }
         }
     }
 
-    private fun setLocation(){
+    private fun enviarConLocation(){
+        try {
+            verifyGPS()
+            manageLocation()
+            //requestNewLocationData()
+        }catch(e: Error){
+            sendMessage()
+            if (swInitCamara.isChecked){
+                iniciarVideo()
+            }
+        }
+    }
+
+    private fun enviarSinLocation(){
+        sendMessage()
+        if (swInitCamara.isChecked){
+            iniciarVideo()
+        }
+        Toast.makeText(baseContext, "Mensaje enviado sin ubicación", Toast.LENGTH_SHORT).show()
+        Toast.makeText(baseContext, "Active la ubicación para un mejor servicio", Toast.LENGTH_SHORT).show()
+    }
+
+    /*private fun setLocation(){
         try {
             verifyGPS()
             manageLocation()
@@ -298,7 +341,7 @@ class MainActivity : AppCompatActivity() {
             iniciarVideo()
             }
         }
-    }
+    }*/
 
     private fun sendMessage(){
         val smsManager: SmsManager = SmsManager.getDefault()
@@ -321,6 +364,11 @@ class MainActivity : AppCompatActivity() {
                         etNumeroContacto3.text.toString(), null, etMensaje.text.toString() + ", Por favor comunicate conmigo en cuanto antes",
                         null, null)
                 }
+                if (etNumeroContacto4.text.isNotEmpty()) {
+                    smsManager.sendTextMessage(
+                        etNumeroContacto4.text.toString(), null, etMensaje.text.toString() + ", Por favor comunicate conmigo en cuanto antes",
+                        null, null)
+                }
             }
             else{
                 if (etNumeroContacto1.text.isNotEmpty()) {
@@ -335,10 +383,13 @@ class MainActivity : AppCompatActivity() {
                     smsManager.sendTextMessage(etNumeroContacto3.text.toString(), null, etMensaje.text.toString() + ", mi ubicacion actual es " + "("
                             + ubicacion + ")", null, null)
                 }
+                if (etNumeroContacto4.text.isNotEmpty()) {
+                    smsManager.sendTextMessage(etNumeroContacto4.text.toString(), null, etMensaje.text.toString() + ", mi ubicacion actual es " + "("
+                            + ubicacion + ")", null, null)
+                }
             }
-
-        }else{
-
+        }
+        else{
             if (ubicacion == null){
                 if (etNumeroContacto1.text.isNotEmpty()) {
                     smsManager.sendTextMessage(
@@ -355,6 +406,11 @@ class MainActivity : AppCompatActivity() {
                         etNumeroContacto3.text.toString(), null, etMensaje.text.toString() + ", Por favor comunicate conmigo en cuanto antes",
                         null, null)
                 }
+                if (etNumeroContacto4.text.isNotEmpty()) {
+                    smsManager.sendTextMessage(
+                        etNumeroContacto4.text.toString(), null, etMensaje.text.toString() + ", Por favor comunicate conmigo en cuanto antes",
+                        null, null)
+                }
             }
             else{
                 if (etNumeroContacto1.text.isNotEmpty()) {
@@ -367,6 +423,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (etNumeroContacto3.text.isNotEmpty()) {
                     smsManager.sendTextMessage(etNumeroContacto3.text.toString(), null, etMensaje.text.toString() + ", mi ubicacion actual es " + "("
+                            + ubicacion + ")", null, null)
+                }
+                if (etNumeroContacto4.text.isNotEmpty()) {
+                    smsManager.sendTextMessage(etNumeroContacto4.text.toString(), null, etMensaje.text.toString() + ", mi ubicacion actual es " + "("
                             + ubicacion + ")", null, null)
                 }
             }
@@ -421,13 +481,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun seleccionarContacto4(v: View){
+        if (hayAlgo4 == false && etNumeroContacto4.text.isEmpty()){
+            var intent = Intent(Intent.ACTION_PICK)
+            intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE)
+            startActivityForResult(intent, 5)
+        }
+        else{
+            etNombreContacto4.setText("")
+            etNumeroContacto4.setText("")
+            hayAlgo4 = false
+            setFbIcon()
+        }
+    }
     private fun setFbIcon(){
         val ivContacto1 = findViewById<ImageView>(R.id.ivContacto1)
         val ivContacto2 = findViewById<ImageView>(R.id.ivContacto2)
         val ivContacto3 = findViewById<ImageView>(R.id.ivContacto3)
+        val ivContacto4 = findViewById<ImageView>(R.id.ivContacto4)
         val fbContacto1 = findViewById<Button>(R.id.fbContacto1)
         val fbContacto2 = findViewById<Button>(R.id.fbContacto2)
         val fbContacto3 = findViewById<Button>(R.id.fbContacto3)
+        val fbContacto4 = findViewById<Button>(R.id.fbContacto4)
         if (hayAlgo == true || etNumeroContacto1.text.isNotEmpty()){
             ivContacto1.setBackgroundColor(ContextCompat.getColor(this, R.color.green))
             fbContacto1.setBackgroundResource(R.drawable.trash_icon)
@@ -451,6 +526,14 @@ class MainActivity : AppCompatActivity() {
         else{
             ivContacto3.setBackgroundColor(ContextCompat.getColor(this, R.color.gray_strong))
             fbContacto3.setBackgroundResource(R.drawable.plus)
+        }
+        if (hayAlgo4 == true || etNumeroContacto4.text.isNotEmpty()){
+            ivContacto4.setBackgroundColor(ContextCompat.getColor(this, R.color.green))
+            fbContacto4.setBackgroundResource(R.drawable.trash_icon)
+        }
+        else{
+            ivContacto4.setBackgroundColor(ContextCompat.getColor(this, R.color.gray_strong))
+            fbContacto4.setBackgroundResource(R.drawable.plus)
         }
 
     }
@@ -510,6 +593,24 @@ class MainActivity : AppCompatActivity() {
                 etNombreContacto3.setText(nombre)
                 etNumeroContacto3.setText(numero)
                 hayAlgo3 = true
+                setFbIcon()
+            }
+        }
+        if (requestCode ==5 && resultCode == RESULT_OK){
+            var uri: Uri? = data?.data
+            var cursor: Cursor? = getContentResolver().query(uri!!, null,null,null,null)
+            if (cursor != null && cursor.moveToFirst()){
+                var indiceName: Int = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                var indiceNumero: Int = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+
+                var nombre: String = cursor.getString(indiceName)
+                var numero: String = cursor.getString(indiceNumero)
+                numero.replace("(", "").replace(")","").replace(" ", "")
+
+
+                etNombreContacto4.setText(nombre)
+                etNumeroContacto4.setText(numero)
+                hayAlgo4 = true
                 setFbIcon()
             }
         }
