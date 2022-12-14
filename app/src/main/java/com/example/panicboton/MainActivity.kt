@@ -7,6 +7,8 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
@@ -28,7 +30,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.google.android.gms.location.*
-
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity() {
@@ -59,6 +62,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var ubicacion: String? = null
+
 
 
 
@@ -194,7 +198,7 @@ class MainActivity : AppCompatActivity() {
         mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         mLocationRequest.interval = 0
         mLocationRequest.fastestInterval = 0
-        mLocationRequest.numUpdates = 2
+        mLocationRequest.numUpdates = 1
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
 
@@ -207,11 +211,20 @@ class MainActivity : AppCompatActivity() {
             ubicacion = "Latitud: " + mLastLocation.latitude.toString()
             ubicacion+= " "
             ubicacion += "Longitud: " +mLastLocation.longitude.toString()
+            //updateAddress(mLastLocation)  Funcion para incluir la direccion escrita de la ubicacion, Error, pendiente de checar
             sendMessage()
             if (swInitCamara.isChecked){
                 iniciarVideo()
             }
         }
+    }
+
+    private fun updateAddress(location: Location){
+        var geocoder: Geocoder
+        var addressList: ArrayList<Address>
+        geocoder = Geocoder(this, Locale.getDefault())
+        addressList = geocoder.getFromLocation(location.latitude, location.longitude,1) as ArrayList<Address>
+        ubicacion += " " + addressList.get(0).getAddressLine(0).toString()
     }
 
     fun abrirAjustes(v: View){
@@ -223,6 +236,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun cerrarAjustes(v: View){
+        cerrar()
+    }
+
+    private fun cerrar(){
         val lyAjustes = findViewById<LinearLayout>(R.id.lyAjustes)
         lyAjustes.isVisible = false
         val btSos = findViewById<LinearLayout>(R.id.btSos)
@@ -232,6 +249,7 @@ class MainActivity : AppCompatActivity() {
     fun guardarAjustes(v: View){
         savePreferences()
         Toast.makeText(baseContext, "Configuración guardada :)", Toast.LENGTH_SHORT).show()
+        cerrar()
     }
 
     private fun initPreferences(){
@@ -292,7 +310,7 @@ class MainActivity : AppCompatActivity() {
             lyAjustes.isVisible = true
             val btSos = findViewById<LinearLayout>(R.id.btSos)
             btSos.isClickable = false
-            Toast.makeText(baseContext, "Agregue contactos para poder enviar el mensaje", Toast.LENGTH_LONG).show()
+            Toast.makeText(baseContext, "Agregue al menos un contacto para poder enviar el mensaje", Toast.LENGTH_LONG).show()
         }
         else{
             if (isLocationActive()){
@@ -318,6 +336,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun enviarSinLocation(){
+        ubicacion = null
         sendMessage()
         if (swInitCamara.isChecked){
             iniciarVideo()
@@ -616,3 +635,5 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
+//Erick Gerardo Zuniga Flores   Universidad Politecnica de Pachuca.
